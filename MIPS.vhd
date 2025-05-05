@@ -35,7 +35,7 @@ ARCHITECTURE behave OF MIPS IS
       Opcode : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
       Zero : IN STD_LOGIC;
       PCWrite : OUT STD_LOGIC;
-      PCWriteCondition: OUT STD_LOGIC;
+      PCWriteCond: OUT STD_LOGIC;
       MemRead : OUT STD_LOGIC;
       MemWrite : OUT STD_LOGIC;
       IRWrite : OUT STD_LOGIC;
@@ -141,7 +141,8 @@ ARCHITECTURE behave OF MIPS IS
   END COMPONENT;
 
   -- Signals
-  SIGNAL Mux_ToPc, pc_out, Mux_ToAddress, MemData, MDR_Out, Mux_ToWriteData : STD_LOGIC_VECTOR(31 DOWNTO 0);
+  SIGNAL pc_out : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+  SIGNAL Mux_ToPc, Mux_ToAddress, MemData, MDR_Out, Mux_ToWriteData : STD_LOGIC_VECTOR(31 DOWNTO 0);
   SIGNAL srcA, srcB, RegA_Out, RegB_Out : STD_LOGIC_VECTOR(31 DOWNTO 0);
   SIGNAL SignExtend_Out, shift_left32_Out : STD_LOGIC_VECTOR(31 DOWNTO 0);
   SIGNAL ALU_A, ALU_B, ALUResult, ALUOut_Out : STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -353,7 +354,7 @@ BEGIN
     Opcode => instruction(31 DOWNTO 26),
     Zero => Zero,
     PCWrite => pc_write,
-    PCWriteCondition => pc_write_condition,
+    PCWriteCond => pc_write_condition,
     MemRead => MemRead,
     MemWrite => MemWrite,
     IRWrite => IR_write,

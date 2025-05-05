@@ -12,21 +12,27 @@ END ENTITY;
 
 ARCHITECTURE Behavioral OF ALU_Control IS
 BEGIN
-  PROCESS (ALUOp, Funct)
+  PROCESS(ALUOp, Funct)
   BEGIN
     CASE ALUOp IS
-      WHEN "00" => ALUControl <= "011"; -- LW/SW: ADD
-      WHEN "01" => ALUControl <= "100"; -- BEQ: SUB
-      WHEN OTHERS =>
+      WHEN "00" => -- LW/SW/ADDI
+        ALUControl <= "000"; -- ADD
+        
+      WHEN "01" => -- BEQ
+        ALUControl <= "001"; -- SUB
+        
+      WHEN "10" => -- R-type
         CASE Funct IS
-          WHEN "100000" => ALUControl <= "011"; -- ADD
-          WHEN "100010" => ALUControl <= "100"; -- SUB
-          WHEN "100100" => ALUControl <= "000"; -- AND
-          WHEN "100101" => ALUControl <= "001"; -- OR
-          WHEN "100110" => ALUControl <= "010"; -- XOR
-            -- when "101010" => ALUControl <= "111"; -- SLT (not implemented in ALU)
-          WHEN OTHERS => ALUControl <= "011"; -- Default to ADD
+          WHEN "100000" => ALUControl <= "000"; -- ADD
+          WHEN "100010" => ALUControl <= "001"; -- SUB
+          WHEN "100100" => ALUControl <= "010"; -- AND
+          WHEN "100101" => ALUControl <= "011"; -- OR
+          WHEN "100110" => ALUControl <= "100"; -- XOR
+          WHEN OTHERS   => ALUControl <= "000"; -- Default ADD
         END CASE;
+        
+      WHEN OTHERS =>
+        ALUControl <= "000"; -- Default ADD
     END CASE;
   END PROCESS;
-END Behavioral;
+END ARCHITECTURE;

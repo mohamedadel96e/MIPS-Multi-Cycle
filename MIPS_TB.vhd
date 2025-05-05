@@ -1,9 +1,10 @@
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
-USE ieee.numeric_std.ALL;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
+USE STD.textio.ALL;
 
 ENTITY MIPS_TB IS
-END ENTITY MIPS_TB;
+END ENTITY;
 
 ARCHITECTURE test OF MIPS_TB IS
     COMPONENT MIPS IS
@@ -13,24 +14,22 @@ ARCHITECTURE test OF MIPS_TB IS
         );
     END COMPONENT;
 
-    -- Signals for the MIPS processor
     SIGNAL clk : STD_LOGIC := '0';
     SIGNAL reset : STD_LOGIC := '1';
-    SIGNAL enable : STD_LOGIC := '1';
+    SIGNAL enable : STD_LOGIC := '0';
 
-    -- Clock period definition
     CONSTANT clk_period : TIME := 10 ns;
 
 BEGIN
-    -- Instantiate the MIPS processor
-    uut: MIPS PORT MAP (
+    -- Instantiate MIPS processor
+    uut : MIPS PORT MAP(
         clk => clk,
         reset => reset,
         enable => enable
     );
 
-    -- Clock process
-    clk_process: PROCESS
+    -- Clock generation
+    clk_process : PROCESS
     BEGIN
         clk <= '0';
         WAIT FOR clk_period/2;
@@ -39,24 +38,26 @@ BEGIN
     END PROCESS;
 
     -- Stimulus process
-    stim_proc: PROCESS
+    stim_proc : PROCESS
     BEGIN
-        -- Hold reset state for 2 clock cycles
+        -- Initial reset
         reset <= '1';
+        enable <= '0';
         WAIT FOR clk_period * 2;
-        
-        -- Release reset
+
+        -- Start simulation
         reset <= '0';
-        WAIT FOR clk_period;
-        
-        -- Enable the processor
         enable <= '1';
-        
-        -- Run for 20 clock cycles to observe behavior
-        WAIT FOR clk_period * 20;
-        
-        -- End simulation
+
+        -- Run for sufficient cycles
+        WAIT FOR clk_period * 50;
+
+        -- Add specific checks here
+        -- Example:
+        -- assert <<signal uut.reg_file.registers(1) : std_logic_vector>> = x"00000005"
+        --   report "Register 1 incorrect" severity error;
+
         WAIT;
     END PROCESS;
 
-END ARCHITECTURE test;
+END ARCHITECTURE;
