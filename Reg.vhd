@@ -1,23 +1,25 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-
-
-entity Reg is
-  generic (N : integer := 32);
-  port (
-      clk     : in  std_logic;
-      DataIn  : in  std_logic_vector(N-1 downto 0);
-      DataOut : out std_logic_vector(N-1 downto 0)
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
+ENTITY Registers IS
+  GENERIC (N : INTEGER := 32);
+  PORT (
+    clk : IN STD_LOGIC;
+    reset : IN STD_LOGIC;
+    enable : IN STD_LOGIC;
+    DataIn : IN STD_LOGIC_VECTOR(N - 1 DOWNTO 0);
+    DataOut : OUT STD_LOGIC_VECTOR(N - 1 DOWNTO 0)
   );
-end entity;
+END ENTITY;
 
-architecture Behavioral of Reg is
-begin
-  process (clk)
-  begin
-      if rising_edge(clk) then
-          DataOut <= DataIn;
-      end if;
-  end process;
-end Behavioral;
+ARCHITECTURE Behavioral OF Registers IS
+BEGIN
+  PROCESS (clk, reset, enable)
+  BEGIN
+    IF reset = '1' THEN
+      DataOut <= (OTHERS => '0');
+    ELSIF rising_edge(clk) AND enable = '1' THEN
+      DataOut <= DataIn;
+    END IF;
+  END PROCESS;
+END Behavioral;

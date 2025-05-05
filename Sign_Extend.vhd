@@ -13,5 +13,6 @@ end entity;
 
 architecture Behavioral of Sign_Extend is
 begin
+  -- Extended <= (15 downto 0 => Immediate(15)) & Immediate;
   Extended <= std_logic_vector(resize(signed(Immediate), 32));
 end Behavioral;

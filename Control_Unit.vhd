@@ -5,10 +5,14 @@ use IEEE.numeric_std.all;
 
 entity Control_Unit is 
   port (
+
+    -- I/P
     clk: in std_logic;
     reset: in std_logic;
     Opcode: in std_logic_vector(5 downto 0);
     Zero: in std_logic;
+
+    -- O/P
     PCWrite: out std_logic;
     MemRead: out std_logic;
     MemWrite: out std_logic;
@@ -30,7 +34,7 @@ architecture Behavioral of Control_Unit is
   signal CurrentState, NextState : State_Type;
   
   begin
-    process (clk, reset)
+    process (clk, reset, Opcode)
     begin
       if reset = '1' then 
         CurrentState <= Fetch; -- For Fetching the Instructions 
@@ -44,6 +48,8 @@ architecture Behavioral of Control_Unit is
       PCWrite <= '0'; MemRead <= '0'; MemWrite <= '0'; IRWrite <= '0';
       RegDst <= '0'; MemtoReg <= '0'; RegWrite <= '0'; ALUSrcA <= '0';
       ALUSrcB <= "00"; ALUOp <= "00"; PCSource <= "00"; IorD <= '0';
+
+
 
       case CurrentState is 
         when Fetch => 
