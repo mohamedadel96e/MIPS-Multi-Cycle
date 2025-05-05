@@ -18,11 +18,11 @@ BEGIN
   PROCESS (A, B, ALUControl)
   BEGIN
     CASE ALUControl IS
-      WHEN "000" => Result <= A AND B;
-      WHEN "001" => Result <= A OR B;
-      WHEN "010" => Result <= A XOR B;
-      WHEN "011" => Result <= STD_LOGIC_VECTOR(signed(A) + signed(B));
-      WHEN "100" => Result <= STD_LOGIC_VECTOR(signed(A) - signed(B));
+      WHEN "000" => Result <= STD_LOGIC_VECTOR(signed(A) + signed(B));
+      WHEN "001" => Result <= STD_LOGIC_VECTOR(signed(A) - signed(B));
+      WHEN "010" => Result <= A AND B;
+      WHEN "011" => Result <= A OR B;
+      WHEN "100" => Result <= A XOR B;
       -- WHEN "111" => Result <= (OTHERS => '0');
       --   IF signed(A) < signed(B) THEN
       --     Result(0) <= '1';
