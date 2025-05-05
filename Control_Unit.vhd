@@ -1,101 +1,142 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-
-
-entity Control_Unit is 
-  port (
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
+ENTITY Control_Unit IS
+  PORT (
 
     -- I/P
-    clk: in std_logic;
-    reset: in std_logic;
-    Opcode: in std_logic_vector(5 downto 0);
-    Zero: in std_logic;
+    clk : IN STD_LOGIC;
+    reset : IN STD_LOGIC;
+    Opcode : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
+    Zero : IN STD_LOGIC;
 
     -- O/P
-    PCWrite: out std_logic;
-    MemRead: out std_logic;
-    MemWrite: out std_logic;
-    IRWrite: out std_logic;
-    RegDst: out std_logic;
-    MemtoReg: out std_logic;
-    RegWrite: out std_logic;
-    ALUSrcA: out std_logic;
-    ALUSrcB: out std_logic_vector(1 downto 0);
-    ALUOp: out std_logic_vector(1 downto 0);
-    PCSource: out std_logic_vector(1 downto 0);
-    IorD: out std_logic
+    PCWrite : OUT STD_LOGIC;
+    PCWriteCondition: OUT STD_LOGIC;
+    MemRead : OUT STD_LOGIC;
+    MemWrite : OUT STD_LOGIC;
+    IRWrite : OUT STD_LOGIC;
+    RegDst : OUT STD_LOGIC;
+    MemtoReg : OUT STD_LOGIC;
+    RegWrite : OUT STD_LOGIC;
+    ALUSrcA : OUT STD_LOGIC;
+    ALUSrcB : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    ALUOp : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    PCSource : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+    IorD : OUT STD_LOGIC
   );
-end entity;
+END ENTITY;
 
-architecture Behavioral of Control_Unit is 
-  type State_Type is (Fetch, Decode, MemAddr, MemReadState, 
-  MemWriteBack, MemWriteState, ExecuteR, ALUWriteBack, Branch, Jump);
-  signal CurrentState, NextState : State_Type;
-  
-  begin
-    process (clk, reset, Opcode)
-    begin
-      if reset = '1' then 
-        CurrentState <= Fetch; -- For Fetching the Instructions 
-      elsif rising_edge(clk) then 
-        CurrentState <= NextState;
-      end if;
-    end process;
+ARCHITECTURE Behavioral OF Control_Unit IS
+  TYPE State_Type IS (
+    Fetch, 
+    Decode, 
+    MemAddr, 
+    MemReadState,
+    MemWriteBack, 
+    MemWriteState, 
+    ExecuteR, 
+    ALUWriteBack, 
+    Branch, 
+    Jump);
+  SIGNAL CurrentState, NextState : State_Type;
 
-    process (CurrentState, Opcode, Zero)
-    begin
-      PCWrite <= '0'; MemRead <= '0'; MemWrite <= '0'; IRWrite <= '0';
-      RegDst <= '0'; MemtoReg <= '0'; RegWrite <= '0'; ALUSrcA <= '0';
-      ALUSrcB <= "00"; ALUOp <= "00"; PCSource <= "00"; IorD <= '0';
+BEGIN
+  PROCESS (clk, reset, Opcode)
+  BEGIN
+    IF reset = '1' THEN
+      CurrentState <= Fetch; -- For Fetching the Instructions 
+    ELSIF rising_edge(clk) THEN
+      CurrentState <= NextState;
+    END IF;
+  END PROCESS;
 
+  PROCESS (CurrentState, Opcode, Zero)
+  BEGIN
+    PCWrite <= '0';
+    MemRead <= '0';
+    MemWrite <= '0';
+    IRWrite <= '0';
+    RegDst <= '0';
+    MemtoReg <= '0';
+    RegWrite <= '0';
+    ALUSrcA <= '0';
+    ALUSrcB <= "00";
+    ALUOp <= "00";
+    PCSource <= "00";
+    IorD <= '0';
+    PCWriteCondition <= '0';
 
+    CASE CurrentState IS
+      WHEN Fetch =>
+        MemRead <= '1';
+        IRWrite <= '1';
+        ALUSrcB <= "01";
+        PCWrite <= '1';
+        NextState <= Decode;
 
-      case CurrentState is 
-        when Fetch => 
-          MemRead <= '1'; IRWrite <='1'; ALUSrcB <= "01";
-          PCWrite <= '1'; NextState <= Decode;
+      WHEN Decode =>
+        ALUSrcB <= "11";
+        ALUOp <= "00";
+        CASE Opcode IS
+          WHEN "000000" => NextState <= ExecuteR; -- R-type
+          WHEN "100011" | "101011" => NextState <= MemAddr; -- LW/SW
+          WHEN "000100" => NextState <= Branch; -- BEQ
+          WHEN "000010" => NextState <= Jump; -- J
+          WHEN OTHERS => NextState <= Fetch;
+        END CASE;
 
-        when Decode =>
-          ALUSrcB <= "11"; ALUOp <= "00";
-          case Opcode is
-            when "000000" => NextState <= ExecuteR; -- R-type
-            when "100011" | "101011" => NextState <= MemAddr; -- LW/SW
-            when "000100" => NextState <= Branch; -- BEQ
-            when "000010" => NextState <= Jump; -- J
-            when others => NextState <= Fetch;
-          end case;
+      WHEN MemAddr => -- LW/SW
+        ALUSrcA <= '1';
+        ALUSrcB <= "10";
+        ALUOp <= "00";
+        IF Opcode = "100011" THEN
+          NextState <= MemReadState;
+        ELSE
+          NextState <= MemWriteState;
+        END IF;
 
-        when MemAddr => -- LW/SW
-          ALUSrcA <= '1'; ALUSrcB <= "10"; ALUOp <= "00";
-          if Opcode = "100011" then NextState <= MemReadState;
-          else NextState <= MemWriteState;
-          end if; 
-        
-        when MemReadState =>
-          MemRead <= '1'; IorD <= '1'; NextState <= MemWriteBack;
+      WHEN MemReadState =>
+        MemRead <= '1';
+        IorD <= '1';
+        NextState <= MemWriteBack;
 
-        when MemWriteBack =>
-          MemtoReg <= '1'; RegWrite <= '1'; NextState <= Fetch;
+      WHEN MemWriteBack =>
+        MemtoReg <= '1';
+        RegWrite <= '1';
+        NextState <= Fetch;
 
-        when MemWriteState =>
-          MemWrite <= '1'; IorD <= '1'; NextState <= Fetch;
+      WHEN MemWriteState =>
+        MemWrite <= '1';
+        IorD <= '1';
+        NextState <= Fetch;
 
-        when ExecuteR =>
-          ALUSrcA <= '1'; ALUOp <= "10"; NextState <= ALUWriteBack;
+      WHEN ExecuteR =>
+        ALUSrcA <= '1';
+        ALUOp <= "10";
+        NextState <= ALUWriteBack;
 
-        when ALUWriteBack =>
-          RegDst <= '1'; RegWrite <= '1'; NextState <= Fetch;
+      WHEN ALUWriteBack =>
+        RegDst <= '1';
+        RegWrite <= '1';
+        NextState <= Fetch;
 
-        when Branch =>
-          ALUSrcA <= '1'; ALUOp <= "01"; PCSource <= "01";
-          if Zero = '1' then PCWrite <= '1'; end if;
-          NextState <= Fetch;
+      WHEN Branch =>
+        ALUSrcA <= '1';
+        ALUOp <= "01";
+        PCSource <= "01";
+        PCWriteCondition <= '1';
+        IF Zero = '1' THEN
+          PCWrite <= '1';
+        END IF;
+        NextState <= Fetch;
 
-        when Jump => 
-          PCSource <= "10"; PCWrite <= '1'; NextState <= Fetch;
-        
-        when others => NextState <= Fetch;
-      end case;
-    end process;
-end architecture;
+      WHEN Jump =>
+        PCSource <= "10";
+        PCWrite <= '1';
+        NextState <= Fetch;
+
+      WHEN OTHERS => NextState <= Fetch;
+    END CASE;
+  END PROCESS;
+END ARCHITECTURE;

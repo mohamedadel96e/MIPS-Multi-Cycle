@@ -1,32 +1,32 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
 
-entity ALU_Control is 
-  port (
-    ALUOp: in std_logic_vector(1 downto 0);
-    Funct: in std_logic_vector(5 downto 0);
-    ALUControl: out std_logic_vector(2 downto 0)
+ENTITY ALU_Control IS
+  PORT (
+    ALUOp : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+    Funct : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
+    ALUControl : OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
   );
-end entity;
+END ENTITY;
 
-architecture Behavioral of ALU_Control is
-begin
-  process (ALUOp, Funct)
-  begin
-    case ALUOp is 
-      when "00" => ALUControl <= "011"; -- LW/SW: ADD
-      when "01" => ALUControl <= "100"; -- BEQ: SUB
-      when others =>
-        case Funct is 
-          when "100000" => ALUControl <= "011"; -- ADD
-          when "100010" => ALUControl <= "100"; -- SUB
-          when "100100" => ALUControl <= "000"; -- AND
-          when "100101" => ALUControl <= "001"; -- OR
-          when "100110" => ALUControl <= "010"; -- XOR
-          -- when "101010" => ALUControl <= "111"; -- SLT (not implemented in ALU)
-          when others    => ALUControl <= "011"; -- Default to ADD
-        end case;
-    end case;
-  end process;
-end Behavioral;
+ARCHITECTURE Behavioral OF ALU_Control IS
+BEGIN
+  PROCESS (ALUOp, Funct)
+  BEGIN
+    CASE ALUOp IS
+      WHEN "00" => ALUControl <= "011"; -- LW/SW: ADD
+      WHEN "01" => ALUControl <= "100"; -- BEQ: SUB
+      WHEN OTHERS =>
+        CASE Funct IS
+          WHEN "100000" => ALUControl <= "011"; -- ADD
+          WHEN "100010" => ALUControl <= "100"; -- SUB
+          WHEN "100100" => ALUControl <= "000"; -- AND
+          WHEN "100101" => ALUControl <= "001"; -- OR
+          WHEN "100110" => ALUControl <= "010"; -- XOR
+            -- when "101010" => ALUControl <= "111"; -- SLT (not implemented in ALU)
+          WHEN OTHERS => ALUControl <= "011"; -- Default to ADD
+        END CASE;
+    END CASE;
+  END PROCESS;
+END Behavioral;
