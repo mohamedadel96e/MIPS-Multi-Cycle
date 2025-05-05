@@ -1,7 +1,7 @@
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
-ENTITY Registers IS
+ENTITY Reg IS
   GENERIC (N : INTEGER := 32);
   PORT (
     clk : IN STD_LOGIC;
@@ -12,7 +12,7 @@ ENTITY Registers IS
   );
 END ENTITY;
 
-ARCHITECTURE Behavioral OF Registers IS
+ARCHITECTURE Behavioral OF Reg IS
 BEGIN
   PROCESS (clk, reset, enable)
   BEGIN
