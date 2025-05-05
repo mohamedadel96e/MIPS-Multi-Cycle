@@ -130,7 +130,7 @@ ARCHITECTURE bahave OF MIPS IS
       ReadData2 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
   END COMPONENT;
-  COMPONENT Shift_Left_2 IS
+  COMPONENT Shift_Left_2_32 IS
     PORT (
       Input : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
       Output : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
@@ -152,7 +152,7 @@ ARCHITECTURE bahave OF MIPS IS
     );
   END COMPONENT;
 
-  COMPONENT shiftleft2_28 IS
+  COMPONENT Shift_Left_2_28 IS
     PORT (
       input : IN STD_LOGIC_VECTOR(25 DOWNTO 0);
       output : OUT STD_LOGIC_VECTOR(27 DOWNTO 0));
@@ -218,12 +218,12 @@ BEGIN
     Immediate => instruction(15 DOWNTO 0),
     Extended => SignExtend
   );
-  Shift_Left1 : Shift_Left_2
+  Shift_Left1 : Shift_Left_2_32
   PORT MAP(
     Input => SignExtend,
     Output => shift_left32ToMux
   );
-  Sl2_comp : shiftleft2_28
+  Sl2_comp : Shift_Left_2_28
   PORT MAP(
     input => instruction(25 DOWNTO 0),
     output => jumpAddress(27 DOWNTO 0)
@@ -293,67 +293,47 @@ BEGIN
     DataOut => ALUOut
   );
   mux1 : MUX_2to1
-  GENERIC MAP(
-    N => 32
-  )
+  GENERIC MAP(N => 32)
   PORT MAP(
-    Sel => IorD,
+    Sel => ALUSrcA,
     In0 => pc_out,
-    In1 => ALUOut,
-    OutMux => Mux_ToAddress
-
+    In1 => RegA_Out,
+    OutMux => Mux1_ToALU
   );
-
-  mux2 : MUX_2to1
-  GENERIC MAP(
-    N => 5
-  )
+  mux2 : MUX_3to1
+  GENERIC MAP(N => 32)
+  PORT MAP(
+    Sel => ALUSrcB,
+    In0 => RegB_Out,
+    In1 => x"00000004", -- constant 4
+    In2 => SignExtend,
+    OutMux => Mux2_ToALU
+  );
+  mux3 : MUX_3to1
+  GENERIC MAP(N => 32)
+  PORT MAP(
+    Sel => PCSource,
+    In0 => ALUResult_TOALUOut,
+    In1 => ALUOut,
+    In2 => jumpAddress,
+    OutMux => Mux_ToPc
+  );
+  mux4 : MUX_2to1
+  GENERIC MAP(N => 5)
   PORT MAP(
     Sel => RegDst,
-    In0 => instruction(20 DOWNTO 16),
-    In1 => instruction(15 DOWNTO 11),
+    In0 => instruction(20 DOWNTO 16), -- rt
+    In1 => instruction(15 DOWNTO 11), -- rd
     OutMux => MuxToWriteReg
-
   );
-
-  mux3 : MUX_2to1
-  GENERIC MAP(
-    N => 32
-  )
+  mux5 : MUX_2to1
+  GENERIC MAP(N => 32)
   PORT MAP(
     Sel => memorytoregister,
     In0 => ALUOut,
     In1 => MDR_ToMux,
     OutMux => Mux_ToWriteData
-
   );
-
-  mux4 : MUX_2to1
-  GENERIC MAP(
-    N => 32
-  )
-  PORT MAP(
-    Sel => ALUSrcA,
-    In0 => pc_out,
-    In1 => srcA,
-    OutMux => Mux1_ToALU
-
-  );
-
-  mux5 : MUX_4to1
-  GENERIC MAP(
-    N => 32
-  )
-  PORT MAP(
-    Sel => ALUSrcB,
-    In0 => srcB,
-    In1 => X"00000004",
-    In2 => SignExtend,
-    In3 => shift_left32ToMux,
-    OutMux => Mux2_ToALU
-
-  );
-
   mux6 : MUX_3to1
   GENERIC MAP(
     N => 32
