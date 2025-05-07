@@ -50,7 +50,7 @@ BEGIN
         enable <= '1';
 
         -- Run for sufficient cycles
-        WAIT FOR clk_period * 50;
+        WAIT FOR clk_period * 200;
 
         -- Add specific checks here
         -- Example:

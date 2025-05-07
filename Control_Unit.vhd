@@ -8,7 +8,7 @@ ENTITY Control_Unit IS
     reset : IN STD_LOGIC;
     Opcode : IN STD_LOGIC_VECTOR(5 DOWNTO 0); -- Instruction bits [31-26]
     Zero : IN STD_LOGIC; -- From ALU
-    -- Main control outputs
+    -- Main control outputs   
     PCWrite : OUT STD_LOGIC;
     PCWriteCond : OUT STD_LOGIC;
     MemRead : OUT STD_LOGIC;
@@ -18,10 +18,10 @@ ENTITY Control_Unit IS
     MemtoReg : OUT STD_LOGIC;
     RegWrite : OUT STD_LOGIC;
     ALUSrcA : OUT STD_LOGIC;
+    IorD : OUT STD_LOGIC;
     ALUSrcB : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     ALUOp : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-    PCSource : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-    IorD : OUT STD_LOGIC
+    PCSource : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
   );
 END ENTITY;
 
@@ -32,8 +32,10 @@ ARCHITECTURE Behavioral OF Control_Unit IS
     MEM_ADDR, -- Memory address computation
     MEM_READ, -- Memory read
     MEM_WRITEBACK, -- Write to register from memory
-    EXECUTE, -- R-type execution
-    ALU_WRITEBACK, -- Write to register from ALU
+    EXECUTE_R, -- R-type execution
+    EXECUTE_I, -- I-type execution
+    ALU_WRITEBACK_R, -- Write to register from ALU (R-type)
+    ALU_WRITEBACK_I, -- Write to register from ALU (I-type)
     BRANCH, -- Branch completion
     JUMP -- Jump completion
   );
@@ -89,7 +91,9 @@ BEGIN
           WHEN "101011" => -- SW
             next_state <= MEM_ADDR;
           WHEN "000000" => -- R-type
-            next_state <= EXECUTE;
+            next_state <= EXECUTE_R;
+          WHEN "001000" => -- ADDI (I-type)
+            next_state <= EXECUTE_I;
           WHEN "000100" => -- BEQ
             next_state <= BRANCH;
           WHEN "000010" => -- J
@@ -129,15 +133,29 @@ BEGIN
         next_state <= FETCH;
 
         --------------------------
-      WHEN EXECUTE => -- R-type execution
+      WHEN EXECUTE_R => -- R-type execution
         ALUSrcA <= '1';
         ALUSrcB <= "00"; -- Use register B
         ALUOp <= "10"; -- Use funct field
-        next_state <= ALU_WRITEBACK;
+        next_state <= ALU_WRITEBACK_R;
 
         --------------------------
-      WHEN ALU_WRITEBACK => -- R-type writeback
+      WHEN EXECUTE_I => -- I-type execution (e.g., ADDI)
+        ALUSrcA <= '1';
+        ALUSrcB <= "10"; -- Use sign-extended immediate
+        ALUOp <= "00"; -- Add operation (for ADDI)
+        next_state <= ALU_WRITEBACK_I;
+
+        --------------------------
+      WHEN ALU_WRITEBACK_R => -- R-type writeback
         RegDst <= '1'; -- Write to rd
+        MemtoReg <= '0'; -- From ALU
+        RegWrite <= '1';
+        next_state <= FETCH;
+
+        --------------------------
+      WHEN ALU_WRITEBACK_I => -- I-type writeback
+        RegDst <= '0'; -- Write to rt
         MemtoReg <= '0'; -- From ALU
         RegWrite <= '1';
         next_state <= FETCH;
