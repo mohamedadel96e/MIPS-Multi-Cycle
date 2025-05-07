@@ -23,10 +23,10 @@ BEGIN
       WHEN "010" => Result <= A AND B;
       WHEN "011" => Result <= A OR B;
       WHEN "100" => Result <= A XOR B;
-      -- WHEN "111" => Result <= (OTHERS => '0');
-      --   IF signed(A) < signed(B) THEN
-      --     Result(0) <= '1';
-      --   END IF;
+      WHEN "111" => Result <= (OTHERS => '0');
+        IF signed(A) < signed(B) THEN
+          Result(0) <= '1';
+        END IF;
       WHEN OTHERS => Result <= (OTHERS => '0');
     END CASE;
   END PROCESS;

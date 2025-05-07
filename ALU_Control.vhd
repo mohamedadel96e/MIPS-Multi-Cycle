@@ -28,6 +28,7 @@ BEGIN
           WHEN "100100" => ALUControl <= "010"; -- AND
           WHEN "100101" => ALUControl <= "011"; -- OR
           WHEN "100110" => ALUControl <= "100"; -- XOR
+          WHEN "101010" => ALUControl <= "111";
           WHEN OTHERS   => ALUControl <= "000"; -- Default ADD
         END CASE;
         
