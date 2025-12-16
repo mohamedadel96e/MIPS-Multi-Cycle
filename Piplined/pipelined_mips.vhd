@@ -118,6 +118,32 @@ ARCHITECTURE BEHAV OF pipelined_mips IS
         );
     END COMPONENT;
 
+    COMPONENT mux3to1
+        GENERIC (
+            nbit_width : INTEGER := 32
+        );
+        PORT (
+            sel : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            input0 : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+            input1 : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+            input2 : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+            output : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0)
+        );
+    END COMPONENT;
+
+    COMPONENT forwarding_unit
+        PORT (
+            idex_rs : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+            idex_rt : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+            exmem_rd : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+            exmem_RegWrite : IN STD_LOGIC;
+            memwb_rd : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+            memwb_RegWrite : IN STD_LOGIC;
+            forwardA : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            forwardB : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
+        );
+    END COMPONENT;
+
     -- Pipeline Register components
     COMPONENT ifid_register
         PORT (
@@ -146,6 +172,7 @@ ARCHITECTURE BEHAV OF pipelined_mips IS
             read_data1_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
             read_data2_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
             sign_extend_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+            rs_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
             rt_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
             rd_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
             RegDst_out : OUT STD_LOGIC;
@@ -160,6 +187,7 @@ ARCHITECTURE BEHAV OF pipelined_mips IS
             read_data1_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
             read_data2_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
             sign_extend_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+            rs_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
             rt_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
             rd_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0)
         );
@@ -236,15 +264,18 @@ ARCHITECTURE BEHAV OF pipelined_mips IS
     SIGNAL idex_ALUOp : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL idex_pc_plus4, idex_read_data1, idex_read_data2 : STD_LOGIC_VECTOR(31 DOWNTO 0);
     SIGNAL idex_sign_extended : STD_LOGIC_VECTOR(31 DOWNTO 0);
-    SIGNAL idex_rt, idex_rd : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    SIGNAL idex_rs, idex_rt, idex_rd : STD_LOGIC_VECTOR(4 DOWNTO 0);
 
     -- ====== EX Stage Signals ======
-    SIGNAL alu_input2 : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    SIGNAL alu_input1, alu_input2 : STD_LOGIC_VECTOR(31 DOWNTO 0);
     SIGNAL alu_result_ex : STD_LOGIC_VECTOR(31 DOWNTO 0);
     SIGNAL zero_ex : STD_LOGIC;
     SIGNAL write_register_ex : STD_LOGIC_VECTOR(4 DOWNTO 0);
     SIGNAL branch_target_ex : STD_LOGIC_VECTOR(31 DOWNTO 0);
     SIGNAL shift_output : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    -- Forwarding signals
+    SIGNAL forwardA, forwardB : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    SIGNAL forwarded_data1, forwarded_data2 : STD_LOGIC_VECTOR(31 DOWNTO 0);
 
     -- ====== EX/MEM Pipeline Register Signals ======
     SIGNAL exmem_MemRead, exmem_MemWrite, exmem_Branch : STD_LOGIC;
@@ -387,6 +418,7 @@ BEGIN
         read_data1_in => read_data1_id,
         read_data2_in => read_data2_id,
         sign_extend_in => sign_extended,
+        rs_in => rs,
         rt_in => rt,
         rd_in => rd,
         -- Outputs
@@ -402,6 +434,7 @@ BEGIN
         read_data1_out => idex_read_data1,
         read_data2_out => idex_read_data2,
         sign_extend_out => idex_sign_extended,
+        rs_out => idex_rs,
         rt_out => idex_rt,
         rd_out => idex_rd
     );
@@ -410,18 +443,50 @@ BEGIN
     -- STAGE 3: Execute (EX)
     -- ========================================
 
+    -- Forwarding Unit for Data Hazard Detection
+    U_forwarding_unit : forwarding_unit PORT MAP(
+        idex_rs => idex_rs,
+        idex_rt => idex_rt,
+        exmem_rd => exmem_write_register,
+        exmem_RegWrite => exmem_RegWrite,
+        memwb_rd => memwb_write_register,
+        memwb_RegWrite => memwb_RegWrite,
+        forwardA => forwardA,
+        forwardB => forwardB
+    );
+
+    -- Forward mux for ALU input A (selects data for Rs)
+    U_mux_forward_a : mux3to1 GENERIC MAP(nbit_width => 32)
+    PORT MAP(
+        sel => forwardA,
+        input0 => idex_read_data1,          -- 00: From register file
+        input1 => exmem_alu_result,         -- 01: Forward from EX/MEM
+        input2 => write_back_data,          -- 10: Forward from MEM/WB
+        output => forwarded_data1
+    );
+
+    -- Forward mux for ALU input B (selects data for Rt before ALUSrc mux)
+    U_mux_forward_b : mux3to1 GENERIC MAP(nbit_width => 32)
+    PORT MAP(
+        sel => forwardB,
+        input0 => idex_read_data2,          -- 00: From register file
+        input1 => exmem_alu_result,         -- 01: Forward from EX/MEM
+        input2 => write_back_data,          -- 10: Forward from MEM/WB
+        output => forwarded_data2
+    );
+
     -- ALU source mux (register or immediate)
     U_mux_alusrc : mux GENERIC MAP(nbit_width => 32)
     PORT MAP(
         sel => idex_ALUSrc,
-        input0 => idex_read_data2,
+        input0 => forwarded_data2,
         input1 => idex_sign_extended,
         output => alu_input2
     );
 
     U_alu : alu PORT MAP(
         opcode => idex_ALUOp,
-        input1 => idex_read_data1,
+        input1 => forwarded_data1,
         input2 => alu_input2,
         result => alu_result_ex,
         zero => zero_ex
@@ -465,7 +530,7 @@ BEGIN
         branch_target_in => branch_target_ex,
         zero_in => zero_ex,
         alu_result_in => alu_result_ex,
-        write_data_in => idex_read_data2,
+        write_data_in => forwarded_data2,
         write_register_in => write_register_ex,
         -- Outputs
         MemRead_out => exmem_MemRead,

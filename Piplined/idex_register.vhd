@@ -25,6 +25,7 @@ ENTITY idex_register IS
         read_data1_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
         read_data2_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
         sign_extend_in : IN STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+        rs_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
         rt_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
         rd_in : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
         -- Control signals output
@@ -41,6 +42,7 @@ ENTITY idex_register IS
         read_data1_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
         read_data2_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
         sign_extend_out : OUT STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+        rs_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
         rt_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
         rd_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0)
     );
@@ -65,6 +67,7 @@ BEGIN
             read_data1_out <= (OTHERS => '0');
             read_data2_out <= (OTHERS => '0');
             sign_extend_out <= (OTHERS => '0');
+            rs_out <= (OTHERS => '0');
             rt_out <= (OTHERS => '0');
             rd_out <= (OTHERS => '0');
         ELSIF rising_edge(clk) THEN
@@ -82,6 +85,7 @@ BEGIN
             read_data1_out <= read_data1_in;
             read_data2_out <= read_data2_in;
             sign_extend_out <= sign_extend_in;
+            rs_out <= rs_in;
             rt_out <= rt_in;
             rd_out <= rd_in;
         END IF;

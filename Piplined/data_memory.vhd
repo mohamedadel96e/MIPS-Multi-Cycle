@@ -16,7 +16,7 @@ ENTITY data_memory IS
 END data_memory;
 
 ARCHITECTURE BEHAV OF data_memory IS
-    TYPE datamemory_mem IS ARRAY (0 TO 19) OF STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0);
+    TYPE datamemory_mem IS ARRAY (0 TO 255) OF STD_LOGIC_VECTOR(nbit_width - 1 DOWNTO 0); -- Word Addresable 
     SIGNAL data_mem : datamemory_mem := (
         x"00000011",
         x"00111000",
