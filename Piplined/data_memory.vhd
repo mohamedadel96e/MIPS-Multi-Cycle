@@ -37,7 +37,8 @@ ARCHITECTURE BEHAV OF data_memory IS
         x"00000000",
         x"00111111",
         x"01000011",
-        x"00011100"
+        x"00011100",
+        others => x"00000000"
     );
 BEGIN
     PROCESS (clk, address)
