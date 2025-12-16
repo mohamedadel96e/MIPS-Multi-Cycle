@@ -41,13 +41,18 @@ ARCHITECTURE BEHAV OF data_memory IS
         others => x"00000000"
     );
 BEGIN
-    PROCESS (clk, address)
+    PROCESS (clk, memory_read_ctrl, address)
     BEGIN
         IF (memory_read_ctrl = '1') THEN
             read_data <= data_mem(to_integer(unsigned(address)));
+        ELSE
+            read_data <= (OTHERS => '0');
         END IF;
-        IF (memory_write_ctrl = '1') THEN
-            data_mem(to_integer(unsigned(address))) <= write_data;
+        
+        IF rising_edge(clk) THEN
+            IF (memory_write_ctrl = '1') THEN
+                data_mem(to_integer(unsigned(address))) <= write_data;
+            END IF;
         END IF;
     END PROCESS;
 END BEHAV;

@@ -32,7 +32,11 @@ BEGIN
     BEGIN
         IF (clk'event AND clk = '1') THEN
             IF (register_write_ctrl = '1') THEN
-                reg_mem(conv_integer(write_register)) <= write_data;
+                IF (conv_integer(write_register) = 0) THEN
+                    reg_mem(0) <= (OTHERS => '0'); -- Ensure $zero remains 0
+                ELSE
+                    reg_mem(conv_integer(write_register)) <= write_data;
+                END IF;
             END IF;
         END IF;
     END PROCESS;

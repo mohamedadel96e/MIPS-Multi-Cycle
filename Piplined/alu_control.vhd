@@ -20,7 +20,7 @@ BEGIN
             WHEN "11" => ALU_ctrl <= "111"; -- I type
             WHEN OTHERS => -- R type
                 CASE funct IS
-                    WHEN "100000" => ALU_ctrl <= "111"; -- add
+                    WHEN "100000" => ALU_ctrl <= "001"; -- add (use same as lw/sw addition)
                     WHEN "100010" => ALU_ctrl <= "100"; -- sub
                     WHEN "100100" => ALU_ctrl <= "101"; -- and
                     WHEN "100101" => ALU_ctrl <= "110"; -- or	 

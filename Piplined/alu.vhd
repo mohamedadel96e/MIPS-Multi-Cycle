@@ -36,59 +36,62 @@ BEGIN
 
         CASE opcode IS
 
-                --when "011" => -- addition 
-
-                --temp_result <= ('0' & input1) + ('0' & input2);
-
-                --zero <= '0';
             WHEN "100" => -- subtraction 
 
                 temp_result <= ('0' & input1) - ('0' & input2);
 
-                zero <= '0';
+                IF (temp_result(nbit_width - 1 DOWNTO 0) = x"00000000") THEN
+                    zero <= '1';
+                ELSE
+                    zero <= '0';
+                END IF;
+
             WHEN "101" => -- and
 
                 temp_result <= ('0' & input1) AND ('0' & input2);
 
                 zero <= '0';
+
             WHEN "000" => -- Nand
 
                 temp_result <= ('0' & input1) NAND ('0' & input2);
 
                 zero <= '0';
+
             WHEN "011" => --slt
 
                 IF (input1 < input2) THEN
                     temp_result <= (0 => '1', OTHERS => '0');
-                    zero <= '0';
                 ELSE
                     temp_result <= (OTHERS => '0');
-                    zero <= '0';
                 END IF;
+                zero <= '0';
 
             WHEN "110" => -- or
 
                 temp_result <= ('0' & input1) OR ('0' & input2);
 
                 zero <= '0';
-            WHEN "001" => -- lw sw 
+
+            WHEN "001" => -- add / lw sw 
 
                 temp_result <= ('0' & input1) + ('0' & input2);
 
                 zero <= '0';
+
             WHEN "111" => --addi
 
                 temp_result <= ('0' & input1) + ('0' & input2);
 
                 zero <= '0';
 
-            WHEN OTHERS => --beq/bneq	  --check with instruction 
+            WHEN OTHERS => --beq/bneq (opcode "010")
+                temp_result <= ('0' & input1) - ('0' & input2);
+
                 IF (input1 = input2) THEN
                     zero <= '1';
-
                 ELSE
                     zero <= '0';
-
                 END IF;
 
         END CASE;
