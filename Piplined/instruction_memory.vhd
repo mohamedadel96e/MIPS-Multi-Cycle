@@ -25,9 +25,9 @@ ARCHITECTURE BEHAV OF instruction_memory IS
     -- ===== Section 1: Basic Instructions (No Hazards) =====
     X"20020003", -- 0:  addi $2, $0, 3        # $2 = 3
     X"20010005", -- 1:  addi $1, $0, 5        # $1 = 5
-    X"00000000", -- 2:  nop                   # No operation
-    X"00000000", -- 3:  nop                   # No operation
-    X"00000000", -- 3:  nop                   # No operation
+    -- X"00000000", -- 2:  nop                   # No operation
+    -- X"00000000", -- 3:  nop                   # No operation
+    -- X"00000000", -- 3:  nop                   # No operation
 
     -- ===== Section 2: Testing ADD with no hazards =====
     X"00221820", -- 4:  add $3, $1, $2        # $3 = $1 + $2 = 5 + 3 = 8 (SHOULD BE 8!)
@@ -83,7 +83,8 @@ ARCHITECTURE BEHAV OF instruction_memory IS
     X"201B0032", -- 36: addi $27, $0, 50      # $27 = 50
     X"AC1B0007", -- 37: sw $27, 7($0)         # mem[7] = $27 = 50
     X"8C1C0007", -- 38: lw $28, 7($0)         # $28 = mem[7] = 50
-    X"239C0001" -- 39: addi $28, $28, 1      # $28 = $28 + 1 = 51 (load-use hazard)
+    X"239C0001", -- 39: addi $28, $28, 1      # $28 = $28 + 1 = 51 (load-use hazard)
+    OTHERS => X"00000000" -- Fill the rest with NOPs
     );
 
 BEGIN

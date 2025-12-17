@@ -18,17 +18,6 @@ END alu;
 ARCHITECTURE BEHAV OF alu IS
     SIGNAL temp_result : STD_LOGIC_VECTOR(nbit_width DOWNTO 0);
 BEGIN
-    -- with opcode select
-    --   temp_result <= ('0' & input1) + ('0' & input2) when "011",  -- Addition
-    --  ('0' & input1) - ('0' & input2) when "100",  -- Subtraction
-    --('0' & input1) and ('0' & input2)when "101",  -- AND
-    --('0' & input1) or ('0' & input2) when "110",   -- OR
-    --  ('0' & input1) + ('0' & input2) when "001",  -- calculate address for LW / SW
-    --('0' & input1) + ('0' & input2) when others;  -- addi
-
-    --zero <= '1' when (temp_result = '0' & x"00000000") else '0';
-
-    --result <= temp_result(nbit_width-1 downto 0);  -- ignore the carry
 
     PROCESS (opcode, input1, input2)
 
