@@ -204,8 +204,8 @@ begin
 	U_alu_just_adder: alu PORT MAP(
 		opcode => "111",  -- means it should add
 		input1 => sig_pc_plus4_result,
-	        input2 => sig_out_of_shift,
-		--input2 => sign_extend_out,
+	        --input2 => sig_out_of_shift,
+		input2 => sign_extend_out,  -- Branch offset added directly without multiplying by 4
 	        zero => sig_zero,  -- the result is not zero
 		result => alu_just_adder_result
 		);	 
